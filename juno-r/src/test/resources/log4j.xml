@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!--
+  ~ Copyright (c) 2013. Josh Lospinoso. All rights reserved.
+  -->
+
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd" >
+<log4j:configuration debug="false">
+
+    <appender name="default.console" class="org.apache.log4j.ConsoleAppender">
+        <param name="target" value="System.out"/>
+        <param name="threshold" value="warn"/>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="> %m%n%n"/>
+        </layout>
+    </appender>
+
+    <root>
+        <priority value="warn"/>
+        <appender-ref ref="default.console"/>
+    </root>
+</log4j:configuration>

@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2014. Josh Lospinoso. All rights reserved
+  -->
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+    <bean id="commonsModelBuilder" class="net.lospi.juno.model.CommonsModelBuilder"/>
+    <bean id="proposalBuilder" class="net.lospi.juno.estimation.proposal.ProposalBuilder"/>
+    <bean id="cachedNaturalLogarithm" class="net.lospi.juno.stat.CachedNaturalLogarithm"/>
+    <bean id="booleanDistribution" class="net.lospi.juno.stat.ColtBooleanDistribution">
+        <constructor-arg index="0" ref="randomEngine"/>
+        <constructor-arg index="1" ref="cachedNaturalLogarithm"/>
+    </bean>
+    <bean id="uniformDistribution" class="net.lospi.juno.stat.ColtUniformDistribution">
+        <constructor-arg ref="randomEngine"/>
+    </bean>
+    <bean id="randomEngine" class="cern.jet.random.engine.MersenneTwister64"/>
+    <bean id="chainSegmentAlterSelectionProbabilityCalculator" class="net.lospi.juno.estimation.proposal.ChainSegmentAlterSelectionProbabilityCalculator"/>
+    <bean id="chainSegmentDeepCopier" class="net.lospi.juno.estimation.proposal.ChainSegmentDeepCopier">
+        <constructor-arg ref="chainSegmentBuilder"/>
+    </bean>
+    <bean id="chainSegmentBuilder" class="net.lospi.juno.elements.ChainSegmentBuilder"/>
+    <bean id="diagonalNetworkMinistepProposalGeneratorHarness" class="net.lospi.juno.estimation.proposal.ReciprocalProposalGenerator">
+        <constructor-arg index="0" ref="diagonalNetworkMinistepInsertionProposalGenerator"/>
+        <constructor-arg index="1" ref="diagonalNetworkMinistepDeletionProposalGenerator"/>
+        <constructor-arg index="2" ref="randomEngine"/>
+    </bean>
+    <bean id="diagonalNetworkMinistepInsertionProposalGenerator" class="net.lospi.juno.estimation.proposal.SpecificProposalGenerator">
+        <constructor-arg index="0" ref="diagonalNetworkMinistepInsertionModificationGenerator"/>
+        <constructor-arg index="1" ref="proposalBuilder"/>
+        <constructor-arg index="2" ref="diagonalInsertionProposalRatioCalculator"/>
+        <constructor-arg index="3" ref="diagonalNetworkMinistepInsertionKappaFactorCalculator"/>
+        <constructor-arg index="4" ref="diagonalNetworkMinistepInsertionEgoLikelihoodRatioCalculator"/>
+        <constructor-arg index="5" ref="diagonalNetworkMinistepInsertionAlterLikelihoodRatioCalculator"/>
+    </bean>
+    <bean id="diagonalNetworkMinistepDeletionProposalGenerator" class="net.lospi.juno.estimation.proposal.SpecificProposalGenerator">
+        <constructor-arg index="0" ref="diagonalNetworkMinistepDeletionModificationGenerator"/>
+        <constructor-arg index="1" ref="proposalBuilder"/>
+        <constructor-arg index="2" ref="diagonalDeletionProposalRatioCalculator"/>
+        <constructor-arg index="3" ref="diagonalNetworkMinistepDeletionKappaFactorCalculator"/>
+        <constructor-arg index="4" ref="diagonalNetworkMinistepDeletionEgoLikelihoodRatioCalculator"/>
+        <constructor-arg index="5" ref="diagonalNetworkMinistepDeletionAlterLikelihoodRatioCalculator"/>
+    </bean>
+    <bean id="diagonalNetworkMinistepInsertionAlterLikelihoodRatioCalculator"
+          class="net.lospi.juno.estimation.proposal.diagonal.insert.DiagonalNetworkMinistepInsertionAlterLikelihoodRatioCalculator"/>
+    <bean id="diagonalNetworkMinistepDeletionAlterLikelihoodRatioCalculator"
+          class="net.lospi.juno.estimation.proposal.diagonal.delete.DiagonalNetworkMinistepDeletionAlterLikelihoodRatioCalculator"/>
+    <bean id="diagonalNetworkMinistepInsertionKappaFactorCalculator" class="net.lospi.juno.estimation.proposal.diagonal.insert.DiagonalNetworkMinistepInsertionKappaFactorCalculator" >
+        <constructor-arg ref="cachedNaturalLogarithm"/>
+    </bean>
+    <bean id="diagonalNetworkMinistepDeletionKappaFactorCalculator" class="net.lospi.juno.estimation.proposal.diagonal.delete.DiagonalNetworkMinistepDeletionKappaFactorCalculator" >
+        <constructor-arg ref="cachedNaturalLogarithm"/>
+    </bean>
+    <bean id="diagonalNetworkMinistepInsertionModificationGenerator" class="net.lospi.juno.estimation.proposal.diagonal.insert.DiagonalNetworkMinistepInsertionModificationGenerator" >
+        <constructor-arg index="0" ref="uniformDistribution"/>
+        <constructor-arg index="1" ref="diagonalInsertionModificationBuilder"/>
+        <constructor-arg index="2" ref="alterSelectionLogProbabilityCalculator"/>
+    </bean>
+    <bean id="diagonalNetworkMinistepDeletionModificationGenerator" class="net.lospi.juno.estimation.proposal.diagonal.delete.DiagonalNetworkMinistepDeletionModificationGenerator" >
+        <constructor-arg index="0" ref="uniformDistribution"/>
+        <constructor-arg index="1" ref="diagonalDeletionModificationBuilder"/>
+        <constructor-arg index="2" ref="simpleMinistepChainCalculator"/>
+    </bean>
+    <bean id="diagonalInsertionProposalRatioCalculator" class="net.lospi.juno.estimation.proposal.diagonal.insert.DiagonalNetworkMinistepInsertionProposalRatioCalculator">
+        <constructor-arg index="0" ref="cachedNaturalLogarithm"/>
+        <constructor-arg index="1" ref="simpleMinistepChainCalculator"/>
+    </bean>
+    <bean id="diagonalDeletionProposalRatioCalculator" class="net.lospi.juno.estimation.proposal.diagonal.delete.DiagonalNetworkMinistepDeletionProposalRatioCalculator">
+        <constructor-arg index="0" ref="cachedNaturalLogarithm"/>
+        <constructor-arg index="1" ref="simpleMinistepChainCalculator"/>
+    </bean>
+    <bean id="diagonalInsertionModificationBuilder" class="net.lospi.juno.estimation.proposal.diagonal.insert.DiagonalNetworkMinistepInsertionModificationBuilder"/>
+    <bean id="diagonalDeletionModificationBuilder" class="net.lospi.juno.estimation.proposal.diagonal.delete.DiagonalNetworkMinistepDeletionModificationBuilder"/>
+    <bean id="diagonalNetworkMinistepInsertionEgoLikelihoodRatioCalculator" class="net.lospi.juno.estimation.proposal.diagonal.insert.DiagonalNetworkMinistepInsertionEgoLikelihoodRatioCalculator">
+        <constructor-arg ref="cachedNaturalLogarithm"/>
+    </bean>
+    <bean id="diagonalNetworkMinistepDeletionEgoLikelihoodRatioCalculator" class="net.lospi.juno.estimation.proposal.diagonal.delete.DiagonalNetworkMinistepDeletionEgoLikelihoodRatioCalculator">
+        <constructor-arg ref="cachedNaturalLogarithm"/>
+    </bean>
+    <bean id="metropolisHastingsIterator" class="net.lospi.juno.estimation.mh.SimpleMetropolisHastingsIterator">
+        <constructor-arg index="0" ref="diagonalNetworkMinistepProposalGeneratorHarness"/>
+        <constructor-arg index="1" ref="booleanDistribution"/>
+        <constructor-arg index="2" ref="metropolisHastingsStepBuilder"/>
+    </bean>
+    <bean id="metropolisHastingsStepBuilder" class="net.lospi.juno.estimation.mh.SimpleMetropolisHastingsStepBuilder"/>
+    <bean id="alterSelectionLogProbabilityCalculator" class="net.lospi.juno.model.NullModelAlterSelectionLogProbabilityCalculator"/>
+    <bean id="commonsExp" class="org.apache.commons.math3.analysis.function.Exp"/>
+    <bean id="commonsLog" class="org.apache.commons.math3.analysis.function.Log"/>
+    <bean id="commonsStatisticsBuilder" class="net.lospi.juno.stat.CommonsStatisticsBuilder"/>
+    <bean id="alterSelectionStatisticsCalculator" class="net.lospi.juno.model.CommonsAlterSelectionStatisticsCalculator">
+        <constructor-arg ref="commonsStatisticsBuilder"/>
+    </bean>
+    <bean id="commonsAlterSelectionDistribution" class="net.lospi.juno.model.CommonsAlterSelectionDistribution">
+        <constructor-arg index="0" ref="cachedNaturalLogarithm"/>
+        <constructor-arg index="1" ref="cachedExponential"/>
+    </bean>
+    <bean id="ministepLinkLikelihoodDerivativesCalculator" class="net.lospi.juno.estimation.calc.MinistepLikelihoodDerivativesCalculator">
+        <constructor-arg index="0" ref="alterSelectionStatisticsCalculator"/>
+        <constructor-arg index="1" ref="commonsAlterSelectionDistribution"/>
+    </bean>
+    <bean id="simpleMinistepChainCalculator" class="net.lospi.juno.elements.SimpleMinistepChainCalculator"/>
+    <bean id="cachedExponential" class="net.lospi.juno.stat.CachedExponential"/>
+</beans>

@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>lospi.net</groupId>
+    <artifactId>juno-r</artifactId>
+    <name>${project.artifactId}</name>
+    <packaging>jar</packaging>
+
+    <parent>
+        <groupId>lospi.net</groupId>
+        <artifactId>juno</artifactId>
+        <version>0.1-SNAPSHOT</version>
+    </parent>
+
+    <dependencies>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>juno-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.easytesting</groupId>
+            <artifactId>fest-assert-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava-collections</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-asm</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>2.4</version>
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <includeArtifactIds>
+                                juno-core,juno-r,commons-math3,colt,log4j,slf4j-log4j12,slf4j-api,spring-context,spring-beans,spring-core,jcl-over-slf4j,spring-asm,spring-expression,guava-collections,guava-base
+                            </includeArtifactIds>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.groovy.maven</groupId>
+                <artifactId>gmaven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>package</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>execute</goal>
+                        </goals>
+                        <configuration>
+                            <source>
+                                def FAIL_ON_R_INSTALL = true
+
+                                log.info "Preparing to build and install R package juno."
+                                def ant = new AntBuilder()
+                                def targetDir = new File(project.basedir, '/target/juno/')
+                                def sourceDir = new File(project.basedir, '/src/main/R/juno/')
+                                def javaDir = new File(targetDir, "inst/java")
+                                if (!sourceDir.exists()) throw new FileNotFoundException("Something is wrong with your source folder. Cannot find $sourceDir.")
+                                log.info "Copying R project structure from $sourceDir into $targetDir"
+                                ant.copy(todir: targetDir) {
+                                    fileset(dir: sourceDir)
+                                }
+
+                                log.info "Locating compiled-jar for inclusion into $sourceDir/java"
+                                def jarFile = new File(project.basedir, "/target/juno-r-${project.version}.jar")
+                                if (!jarFile.exists()) throw new FileNotFoundException("Cannot find file $jarFile. Did you run assembly plugin?")
+                                log.info "Found jarFile. Copying into $javaDir"
+
+                                ant.copy(file: jarFile, todir: javaDir)
+
+                                log.info "Locating dependencies for inclusion into $sourceDir/java"
+                                def dependencyDirectory = new File(project.basedir, "/target/dependency/")
+                                if (!dependencyDirectory.exists()) throw new FileNotFoundException("Cannot find $dependencyDirectory. Did you run copy-dependencies plugin?")
+                                log.info "Found $dependencyDirectory. Copying into $javaDir"
+                                ant.copy(todir: javaDir) {
+                                    fileset(dir: dependencyDirectory)
+                                }
+
+                                // Determine where to install the library, if desired
+                                def libraryArgument = project.properties["rlib"] != null ? "-l \"${project.properties["rlib"]}\"" : ""
+
+                                // Now package the results:
+                                def command = "R CMD INSTALL $libraryArgument --build $targetDir --no-multiarch"
+                                log.info "Executing $command:"
+                                def proc = command.execute(null, new File(project.basedir, 'target'))
+                                proc.waitFor()
+                                def result = proc.text
+                                def error = proc.err.text
+                                log.info "R CMD executed:\n$result"
+
+                                def failure = ((proc.exitValue() != 0) &amp;    FAIL_ON_R_INSTALL)
+                                if (failure) throw new RuntimeException("R CMD was unsuccessful, status: ${proc.exitValue()}.\n$error\n".toString())
+                            </source>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

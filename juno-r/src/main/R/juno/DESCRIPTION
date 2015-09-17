@@ -1,0 +1,11 @@
+Package: juno
+Type: Package
+Title: SAOM with REM and ME
+Version: 0.0-1
+Date: 2014-04-07
+Author: Josh Lospinoso
+Maintainer: Josh Lospinoso <josh@lospi.net>
+Depends: rJava, methods, Matrix
+Description: Stochastic actor oriented modeling with relational events and measurement error
+License: Commercial
+URL: http://www.lospi.net
